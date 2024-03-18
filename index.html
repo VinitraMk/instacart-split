@@ -13,33 +13,21 @@
     }
   </script>
   <body onload="checkGmailAuth()">
-    <!--
-    <p>Gmail API Quickstart</p>
-
-    <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
-    <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
-    -->
-
     <div class="icart">
         <header class="icart-header">
             Instacart Split
         </header>
         <div class='w-100 m-t-4 text-c overflow-auto--y'>
-            <!--
-            <button id="authorize_button" class="icart-btn-primary d-none" onclick="handleAuthClick()">Authorize Gmail API</button>
-            -->
-            <form class="m-b-4">
-                <label class="m-r-2">Upload order html page:</label>
-                <input id="file" name="file" type="file" onchange="readFile(event)"/>
+            <form class="m-b-4" id="upload_form">
+                <!--<label class="m-r-2">Upload order html page:</label>-->
+                <label class="icart-btn-primary d-iblock">
+                    <input id="file" name="file" type="file" onchange="readFile(event)"/>
+                    Upload Order Html Page
+                </label>
             </form>
-            <div id="order_summary" class="">
-                <!--
-                <div class="icart-select">
-                    <select id="order_select" onchange="selectOrder()">
-                        <option value="0">Select Order:</option>
-                    </select>
-                </div>
-                -->
+            <div id="order_summary" class="d-none">
+                <div class="m-t-2" id="order_info">Order Info: </div>
+                <h4>Order Items</h4>
                 <table class="icart-table" style="width: 700px;" id="share_table">
                     <thead>
                         <th class="icart-table__th" style="width: 40%;">Item Name</th>
@@ -50,14 +38,12 @@
                     </thead>
                 </table>
                 <table class="icart-table m-t-4" style="width: 700px;" id="order_total">
-                    <!--
-                    <tbody>
-                        <tr><td class="icart-table__td text-r">name</td><td class="icart-table__td text-r">1</td></tr>
-                        <tr><td class="icart-table__td text-r">name</td><td class="icart-table__td text-r">1</td></tr>
-                    </tbody>
-                -->
                 </table>
-                <button class="icart-btn-primary m-y-4" onclick="calculateShares()">Calculate Shares</button>
+                <div>
+                    <button class="icart-btn-primary m-y-4" onclick="calculateShares()">Calculate Shares</button>
+                    <button class="icart-btn-primary m-y-4" onclick="refresh()">Upload New Order</button>
+                </div>
+                <h4>Even Shares</h4>
                 <table class="icart-table" style="width: 700px; margin-bottom: 20px;" id="share_summary">
                 </table>
                 <h4>Uneven Shares</h4>

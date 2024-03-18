@@ -7,3 +7,7 @@ html, body {
 button {
     border: none;
 }
+
+label input[type="file"] {
+    display: none;
+}

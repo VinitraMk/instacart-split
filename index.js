@@ -3,8 +3,6 @@ const MATE1 = 'urja';
 const MATE2 = 'vinitra';
 const MATE3 = 'srimathi';
 
-const messages = [];
-const message_contents = [];
 let selectedOrderContent = null;
 let selectedOrderShares = [];
 let individualShares = {
@@ -14,6 +12,23 @@ let individualShares = {
 }
 let selectedOrderTotal = [];
 let unEvenShares = [];
+let orderInfo = '';
+
+function refresh() {
+    document.getElementById('file').value = "";
+    selectedOrderTotal = [];
+    unEvenShares = [];
+    orderInfo = '';
+    individualShares = {
+        [MATE1]: 0.0,
+        [MATE2]: 0.0,
+        [MATE3]: 0.0 
+    }
+    selectedOrderContent = null;
+    selectedOrderShares = [];
+    document.getElementById('order_summary').classList.add('d-none');
+    document.getElementById('upload_form').classList.remove('d-none');
+}
 
 function readFile(event) {
     const f = event.target.files[0];
@@ -21,6 +36,8 @@ function readFile(event) {
         const r = new FileReader();
         r.onload = function (e) {
             const contents = e.target.result;
+            document.getElementById('order_summary').classList.remove('d-none');
+            document.getElementById('upload_form').classList.add('d-none');
             readOrder(contents);
         }
         r.readAsText(f);
@@ -34,10 +51,14 @@ function readOrder(htmlContent) {
     const html = parser.parseFromString(htmlContent, 'text/html');
     const itemMain = html.querySelector('main');
     let itemDivs = Array.from(itemMain.querySelectorAll('table[class="items delivered"] td[class="order-item"]'));
-    const itemTotals = Array.from(itemMain.querySelector('div.totals-container').querySelectorAll('table > tbody > tr'));
     selectedOrderContent = itemDivs.map(d => d.childNodes[1]);
     itemDivs = Array.from(itemMain.querySelectorAll('table[class="items adjustments"] td[class="order-item"]')).map(d => d.childNodes[1]);
     selectedOrderContent = selectedOrderContent.concat(itemDivs);
+
+    const itemTotals = Array.from(itemMain.querySelector('div.totals-container').querySelectorAll('table > tbody > tr'));
+
+    orderInfo = itemMain.querySelector('div.DriverDeliverySchedule').innerText;
+    document.getElementById('order_info').innerText = `Order Info: ${orderInfo}`;
 
     selectedOrderTotal = [];
     for(let i = 0; i < itemTotals.length; i++) {
