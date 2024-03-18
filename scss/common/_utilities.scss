@@ -1,0 +1,138 @@
+.h-100 {
+    height: 100%;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+@each $box in a, x, y, t, b, l, r {
+    @for $i from 0 through 20 {
+      .m-#{$box}-#{$i} {
+        @if $box == "a" {
+          margin: ($spacer * $i);
+        }
+  
+        @if $box == "x" {
+          margin-left: ($spacer * $i);
+          margin-right: ($spacer * $i);
+        }
+  
+        @if $box == "y" {
+          margin-top: ($spacer * $i);
+          margin-bottom: ($spacer * $i);
+        }
+  
+        @if $box == "t" {
+          margin-top: ($spacer * $i) !important;
+        }
+  
+        @if $box == "b" {
+          margin-bottom: ($spacer * $i) !important;
+        }
+  
+        @if $box == "l" {
+          margin-left: ($spacer * $i);
+        }
+  
+        @if $box == "r" {
+          margin-right: ($spacer * $i) !important;
+        }
+      }
+  
+      .m-#{$box}-n#{$i} {
+        @if $box == "a" {
+          margin: -($spacer * $i);
+        }
+  
+        @if $box == "x" {
+          margin-left: -($spacer * $i);
+          margin-right: -($spacer * $i);
+        }
+  
+        @if $box == "y" {
+          margin-top: -($spacer * $i);
+          margin-bottom: -($spacer * $i);
+        }
+  
+        @if $box == "t" {
+          margin-top: -($spacer * $i);
+        }
+  
+        @if $box == "b" {
+          margin-bottom: -($spacer * $i);
+        }
+  
+        @if $box == "l" {
+          margin-left: -($spacer * $i);
+        }
+  
+        @if $box == "r" {
+          margin-right: -($spacer * $i);
+        }
+      }
+  
+      .p-#{$box}-#{$i} {
+        @if $box == "a" {
+          padding: ($spacer * $i) !important;
+        }
+  
+        @if $box == "x" {
+          padding-left: ($spacer * $i);
+          padding-right: ($spacer * $i);
+        }
+  
+        @if $box == "y" {
+          padding-top: ($spacer * $i);
+          padding-bottom: ($spacer * $i);
+        }
+  
+        @if $box == "t" {
+          padding-top: ($spacer * $i);
+        }
+  
+        @if $box == "b" {
+          padding-bottom: ($spacer * $i);
+        }
+  
+        @if $box == "l" {
+          padding-left: ($spacer * $i) !important;
+        }
+  
+        @if $box == "r" {
+          padding-right: ($spacer * $i);
+        }
+      }
+  
+    }
+  }
+
+.d {
+    &-none {
+        display: none;
+    }
+    &-block {
+        display: block;
+    }
+}
+
+.text {
+    &-c {
+        text-align: center;
+    }
+    &-r {
+        text-align: right;
+    }
+    &-capitalize {
+        text-transform: capitalize;
+    }
+}
+
+.overflow {
+    &-auto {
+        overflow: auto;
+        &--y {
+            overflow-y: auto;
+        }
+    }
+}

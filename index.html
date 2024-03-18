@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Gmail API Quickstart</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="scss/styles.css">
+  </head>
+  <script>
+    function checkGmailAuth() {
+        if(window.localStorage.getItem('gapi_token')) {
+            document.getElementById('authorize_button').classList.add('d-none');
+        }
+    }
+  </script>
+  <body onload="checkGmailAuth()">
+    <!--
+    <p>Gmail API Quickstart</p>
+
+    <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
+    <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+    -->
+
+    <div class="icart">
+        <header class="icart-header">
+            Instacart Split
+        </header>
+        <div class='w-100 m-t-4 text-c overflow-auto--y'>
+            <!--
+            <button id="authorize_button" class="icart-btn-primary d-none" onclick="handleAuthClick()">Authorize Gmail API</button>
+            -->
+            <form class="m-b-4">
+                <label class="m-r-2">Upload order html page:</label>
+                <input id="file" name="file" type="file" onchange="readFile(event)"/>
+            </form>
+            <div id="order_summary" class="">
+                <!--
+                <div class="icart-select">
+                    <select id="order_select" onchange="selectOrder()">
+                        <option value="0">Select Order:</option>
+                    </select>
+                </div>
+                -->
+                <table class="icart-table" style="width: 700px;" id="share_table">
+                    <thead>
+                        <th class="icart-table__th" style="width: 40%;">Item Name</th>
+                        <th class="icart-table__th">Item Price</th>
+                        <th class="icart-table__th">Urja</th>
+                        <th class="icart-table__th">Vinitra</th>
+                        <th class="icart-table__th">Srimathi</th>
+                    </thead>
+                </table>
+                <table class="icart-table m-t-4" style="width: 700px;" id="order_total">
+                    <!--
+                    <tbody>
+                        <tr><td class="icart-table__td text-r">name</td><td class="icart-table__td text-r">1</td></tr>
+                        <tr><td class="icart-table__td text-r">name</td><td class="icart-table__td text-r">1</td></tr>
+                    </tbody>
+                -->
+                </table>
+                <button class="icart-btn-primary m-y-4" onclick="calculateShares()">Calculate Shares</button>
+                <table class="icart-table" style="width: 700px; margin-bottom: 20px;" id="share_summary">
+                </table>
+                <h4>Uneven Shares</h4>
+                <table class="icart-table" style="width: 700px; margin-bottom: 20px;" id="uneven_shares"></table>
+            </div>
+        </div>
+    </div>
+
+    <pre id="content" style="white-space: pre-wrap;"></pre>
+    <script async defer src="./index.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+  </body>
+</html>

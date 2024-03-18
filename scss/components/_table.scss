@@ -1,0 +1,14 @@
+#{$global}-table{
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: auto;
+
+    &__th, &__td {
+        padding: pxToRem(10) pxToRem(5);
+    }
+
+    &__td img {
+        min-height: pxToRem(60);
+        min-height: pxToRem(60);
+    }
+}

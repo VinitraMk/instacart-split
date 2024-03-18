@@ -1,0 +1,12 @@
+#{$global}-btn {
+    &-primary {
+        height: pxToRem(20);
+        padding: pxToRem(10);
+        color: white;
+        background-color: $green;
+        text-transform: uppercase;
+        box-sizing: content-box;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+}

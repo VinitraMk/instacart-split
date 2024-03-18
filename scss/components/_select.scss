@@ -1,0 +1,12 @@
+#{$global}-select {
+    & select {
+        width: pxToRem(400);
+        height: pxToRem(40);
+        padding: pxToRem(10) pxToRem(15);
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-top: pxToRem(20);
+        margin-bottom: pxToRem(20);
+    }
+}
