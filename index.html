@@ -1,17 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Gmail API Quickstart</title>
+    <title>Instacart Split</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="scss/styles.css">
   </head>
-  <script>
-    function checkGmailAuth() {
-        if(window.localStorage.getItem('gapi_token')) {
-            document.getElementById('authorize_button').classList.add('d-none');
-        }
-    }
-  </script>
   <body onload="checkGmailAuth()">
     <div class="icart">
         <header class="icart-header">
@@ -54,8 +47,5 @@
 
     <pre id="content" style="white-space: pre-wrap;"></pre>
     <script async defer src="./index.js"></script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-
   </body>
 </html>
