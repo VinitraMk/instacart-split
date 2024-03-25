@@ -139,3 +139,18 @@
         }
     }
 }
+
+.font-c {
+    &-red {
+        color: $red;
+    }
+    &-blue {
+        color: blue;
+    }
+}
+
+.fw {
+    &-bold {
+        font-weight: bold;
+    }
+}

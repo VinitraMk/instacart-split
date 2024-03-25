@@ -1937,6 +1937,17 @@ label input[type=file] {
   overflow-y: auto;
 }
 
+.font-c-red {
+  color: red;
+}
+.font-c-blue {
+  color: blue;
+}
+
+.fw-bold {
+  font-weight: bold;
+}
+
 .icart-header {
   height: 2.1428571429rem;
   background: #0a7f15;

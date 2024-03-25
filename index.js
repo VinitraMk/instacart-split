@@ -13,6 +13,7 @@ let individualShares = {
 let selectedOrderTotal = [];
 let unEvenShares = [];
 let orderInfo = '';
+let credit = 0.0
 
 function refresh() {
     document.getElementById('file').value = "";
@@ -26,8 +27,22 @@ function refresh() {
     }
     selectedOrderContent = null;
     selectedOrderShares = [];
+    credit = 0.0;
     document.getElementById('order_summary').classList.add('d-none');
     document.getElementById('upload_form').classList.remove('d-none');
+    let tableBody = document.getElementById('order_total').querySelector('tbody');
+    if (tableBody) {
+        tableBody.remove();
+    }
+    tableBody = document.getElementById('share_summary').querySelector('tbody');
+    if (tableBody) {
+        tableBody.remove();
+    }
+
+    tableBody = document.getElementById('uneven_shares').querySelector('tbody');
+    if (tableBody) {
+        tableBody.remove();
+    }
 }
 
 function readFile(event) {
@@ -50,9 +65,10 @@ function readOrder(htmlContent) {
     const parser = new DOMParser();
     const html = parser.parseFromString(htmlContent, 'text/html');
     const itemMain = html.querySelector('main');
-    let itemDivs = Array.from(itemMain.querySelectorAll('table[class="items delivered"] td[class="order-item"]'));
-    selectedOrderContent = itemDivs.map(d => d.childNodes[1]);
-    itemDivs = Array.from(itemMain.querySelectorAll('table[class="items adjustments"] td[class="order-item"]')).map(d => d.childNodes[1]);
+    let itemDivs = Array.from(itemMain.querySelectorAll('table[class="items delivered"] td[class="order-item"] div[class="item-block"] div[class*="item-delivered"]'));
+    console.log('item divs', itemDivs)
+    selectedOrderContent = itemDivs;
+    itemDivs = Array.from(itemMain.querySelectorAll('table[class="items adjustments"] td[class="order-item"] div[class="item-block"] div[class*="item-delivered"]'));
     selectedOrderContent = selectedOrderContent.concat(itemDivs);
 
     const itemTotals = Array.from(itemMain.querySelector('div.totals-container').querySelectorAll('table > tbody > tr'));
@@ -68,6 +84,18 @@ function readOrder(htmlContent) {
             price: parseFloat(itemTotals[i].childNodes[3].innerText.replace('$', ''))
         });
     }
+
+    chargeDivs = Array.from(itemMain.querySelectorAll('div.totals-container h2'))
+    chargeTexts = chargeDivs.map(d => d.innerText)
+    for (let i = 0; i< chargeTexts.length; i++) {
+        if (chargeTexts[i].includes('Instacart credits')) {
+            chargeDivs = Array.from(itemMain.querySelectorAll('div.totals-container table[class="charges"]'))
+            creditInfo = chargeDivs[i].innerText.replace('\n', '').replace(/\s/g, "")
+            fi = creditInfo.indexOf('Totalcharged')
+            //console.log(creditInfo.substr(fi+13), creditInfo.substr(fi+13).replace("$", "").length)
+            credit = parseFloat(creditInfo.substr(fi+13))
+        }
+    }
     populateOrderTable();
     populateOrderTotal();
 }
@@ -79,7 +107,7 @@ function populateOrderTable() {
     }
     tableBody = document.createElement('tbody');
     selectedOrderContent.forEach((orderRow, i) => {
-        const oEls = orderRow.childNodes[1].childNodes;
+        const oEls = orderRow.childNodes;
         //const pImgEl = oEls[1];
         const pEls = oEls[3].childNodes;
         let pPriceEl = null;
@@ -90,8 +118,18 @@ function populateOrderTable() {
             pPriceEl = oEls[5].childNodes[2];
         }
         //const pPriceEl = oEls[5].childNodes[2];
-        const priceStr = pPriceEl.querySelector('div').innerText;
-        const priceVal = parseFloat(priceStr.replace('$', ''));
+        if (pPriceEl.innerText.includes("Final item price")) {
+            fi = pPriceEl.innerText.indexOf("Final item price");
+            di = pPriceEl.innerText.substr(fi).indexOf("$");
+            priceStr = pPriceEl.innerText.substr(fi + 17)
+            priceVal = parseFloat(priceStr.replace("$", ""))
+        }
+        else {
+            priceStr = pPriceEl.innerText;
+            priceVal = parseFloat(priceStr.replace("$", ""))
+        }
+        //const priceStr = pPriceEl.querySelector('div').innerText;
+        //const priceVal = parseFloat(priceStr.replace('$', ''));
         const pName = pEls[0].data.replace('\n', '')
         //console.log(pName, priceStr, imgEl);
         let tr = document.createElement('tr');
@@ -160,6 +198,39 @@ function populateOrderTotal() {
         tr.appendChild(td);
         tableBody.appendChild(tr);
     })
+    const fullTotal = selectedOrderTotal.filter(x => x.type === "Total")[0]
+    tr = document.createElement('tr');
+    td = document.createElement('td');
+    td.classList.add('icart-table__td');
+    td.classList.add('text-capitalize');
+    td.classList.add('font-c-red');
+    td.classList.add('text-r');
+    td.innerText = 'Instacart credit applied';
+    tr.appendChild(td);
+    td = document.createElement('td');
+    td.classList.add('icart-table__td');
+    td.classList.add('font-c-red')
+    td.classList.add('text-r');
+    td.innerText = credit;
+    tr.appendChild(td);
+    tableBody.appendChild(tr);
+
+    tr = document.createElement('tr');
+    td = document.createElement('td');
+    td.classList.add('icart-table__td');
+    td.classList.add('text-capitalize');
+    td.classList.add('fw-bold');
+    td.classList.add('text-r');
+    td.innerText = 'Total charges applied';
+    tr.appendChild(td);
+    td = document.createElement('td');
+    td.classList.add('icart-table__td');
+    td.classList.add('fw-bold')
+    td.classList.add('text-r');
+    td.innerText = fullTotal.price - credit;
+    tr.appendChild(td);
+    tableBody.appendChild(tr);    
+    
     document.getElementById('order_total').appendChild(tableBody);
 }
 
@@ -206,6 +277,7 @@ function calculateShares() {
         }
     })
     const itemTotals = selectedOrderTotal.filter(x => (x.type === 'Checkout Bag Fee' || x.type === 'Checkout Bag Fee Tax' || x.type === 'Sales Tax' || x.type === 'Service Fee')).map(x => x.price)
+    //const existingCredit = 
     const miscCharges = itemTotals.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
 
     let tableBody = document.getElementById('share_summary').querySelector('tbody');
@@ -224,7 +296,7 @@ function calculateShares() {
         td = document.createElement('td');
         td.classList.add('icart-table__td');
         td.classList.add('text-capitalize');
-        td.innerText = individualShares[x] + (miscCharges/3);
+        td.innerText = individualShares[x] + (miscCharges/3) - (credit/3);
         tr.appendChild(td);
         tableBody.appendChild(tr);
     })
@@ -249,5 +321,6 @@ function calculateShares() {
         tr.appendChild(td);
         tableBody.appendChild(tr);
     })
+    
     document.getElementById('uneven_shares').appendChild(tableBody);
 }
