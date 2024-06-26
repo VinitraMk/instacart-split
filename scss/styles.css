@@ -1991,4 +1991,10 @@ label input[type=file] {
   margin-bottom: 1.4285714286rem;
 }
 
+.icart-control-input {
+  border: 1px solid #c4c4c4;
+  border-radius: 0.3571428571rem;
+  height: 2.5rem;
+}
+
 /*# sourceMappingURL=styles.css.map */

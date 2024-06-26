@@ -1,42 +1,68 @@
+//import { utils } from 'xlsx';
 
 const MATE1 = 'urja';
 const MATE2 = 'vinitra';
 const MATE3 = 'srimathi';
 
+let MATES = [];
+
 let selectedOrderContent = null;
 let selectedOrderShares = [];
 let individualShares = {
-    [MATE1]: 0.0,
-    [MATE2]: 0.0,
-    [MATE3]: 0.0 
 }
 let selectedOrderTotal = [];
 let unEvenShares = [];
 let orderInfo = '';
 let credit = 0.0
+let N = 0;
+
+window.onload = () => {
+    initPage();
+}
+
+function initPage() {
+    var ppls = localStorage.getItem("instacart-ppl");
+    MATES = ppls.split(",");
+    var tableEl = document.querySelector('#people_share_table tbody');
+    MATES.forEach(mate => {
+        var rowEl = document.createElement('tr');
+        var cellEll = document.createElement('td');
+        cellEll.classList.add('icart-table__td');
+        cellEll.innerText = mate;
+        rowEl.appendChild(cellEll);
+        tableEl.appendChild(rowEl);
+        individualShares[mate] = 0.0;
+    });
+    N = MATES.length;
+}
 
 function refresh() {
     document.getElementById('file').value = "";
     selectedOrderTotal = [];
     unEvenShares = [];
     orderInfo = '';
-    individualShares = {
-        [MATE1]: 0.0,
-        [MATE2]: 0.0,
-        [MATE3]: 0.0 
-    }
+    MATES.forEach(mate => {
+        individualShares[mate] = 0.0;
+    })
     selectedOrderContent = null;
     selectedOrderShares = [];
     credit = 0.0;
     document.getElementById('order_summary').classList.add('d-none');
     document.getElementById('upload_form').classList.remove('d-none');
+    document.getElementById('people_share').classList.remove('d-none');
     let tableBody = document.getElementById('order_total').querySelector('tbody');
     if (tableBody) {
         tableBody.remove();
     }
+
     tableBody = document.getElementById('share_summary').querySelector('tbody');
     if (tableBody) {
         tableBody.remove();
+    }
+
+    var tableHead = document.getElementById('share_table').querySelector('thead'); 
+    if (tableHead) {
+        tableHead.remove();
     }
 
     tableBody = document.getElementById('uneven_shares').querySelector('tbody');
@@ -45,19 +71,43 @@ function refresh() {
     }
 }
 
-function readFile(event) {
-    const f = event.target.files[0];
-    if (f) {
-        const r = new FileReader();
-        r.onload = function (e) {
-            const contents = e.target.result;
-            document.getElementById('order_summary').classList.remove('d-none');
-            document.getElementById('upload_form').classList.add('d-none');
-            readOrder(contents);
+function addPeople(event) {
+    var inp_el = document.getElementById('people_input');
+    var inp_val = inp_el.value;
+    if (inp_val != null && inp_val != "") {
+        var ppls = localStorage.getItem("instacart-ppl");
+        if (ppls === "" || ppls === null) {
+            ppls = inp_val.toLowerCase();
+        } else {
+            ppls = `${ppls},${inp_val.toLowerCase()}`
         }
-        r.readAsText(f);
+        localStorage.setItem("instacart-ppl", ppls);
+        location.reload();
     } else {
-        alert("Failed to load file");
+        alert("input field empty!")
+    }
+}
+
+function readFile(event) {
+    var ppl_share = localStorage.getItem("instacart-ppl");
+    if (ppl_share === "" || ppl_share === null) {
+        alert('add people for share');
+    }
+    else {
+        const f = event.target.files[0];
+        if (f) {
+            const r = new FileReader();
+            r.onload = function (e) {
+                const contents = e.target.result;
+                document.getElementById('order_summary').classList.remove('d-none');
+                document.getElementById('upload_form').classList.add('d-none');
+                document.getElementById('people_share').classList.add('d-none');
+                readOrder(contents);
+            }
+            r.readAsText(f);
+        } else {
+            alert("Failed to load file");
+        }
     }
 }
 
@@ -66,7 +116,7 @@ function readOrder(htmlContent) {
     const html = parser.parseFromString(htmlContent, 'text/html');
     const itemMain = html.querySelector('main');
     let itemDivs = Array.from(itemMain.querySelectorAll('table[class="items delivered"] td[class="order-item"] div[class="item-block"] div[class*="item-delivered"]'));
-    console.log('item divs', itemDivs)
+    //console.log('item divs', itemDivs)
     selectedOrderContent = itemDivs;
     itemDivs = Array.from(itemMain.querySelectorAll('table[class="items adjustments"] td[class="order-item"] div[class="item-block"] div[class*="item-delivered"]'));
     selectedOrderContent = selectedOrderContent.concat(itemDivs);
@@ -101,6 +151,33 @@ function readOrder(htmlContent) {
 }
 
 function populateOrderTable() {
+    let tableHead = document.getElementById('share_table').querySelector('thead');
+    if (tableHead) {
+        tableHead.remove();
+    } else {
+        tableHead = document.createElement('thead');
+    }
+    var tableR = document.createElement('tr');
+    var thEl = document.createElement('th');
+    thEl.classList.add('icart-table__th');
+    thEl.setAttribute('style', 'width: 40%;');
+    thEl.innerText = 'Item Name';
+    tableR.appendChild(thEl);
+    thEl = document.createElement('th');
+    thEl.classList.add('icart-table__th');
+    thEl.innerText = 'Item Price';
+    tableR.appendChild(thEl);
+
+    MATES.forEach(mate => {
+        var thEl = document.createElement('th');
+        thEl.classList.add('icart-table__th');
+        thEl.innerText = mate.charAt(0).toUpperCase() + mate.substring(1);
+        tableR.appendChild(thEl);
+    })
+    tableHead.appendChild(tableR);
+    document.getElementById('share_table').appendChild(tableHead);
+
+
     let tableBody = document.getElementById('share_table').querySelector('tbody');
     if (tableBody) {
         tableBody.remove();
@@ -132,6 +209,13 @@ function populateOrderTable() {
         //const priceVal = parseFloat(priceStr.replace('$', ''));
         const pName = pEls[0].data.replace('\n', '')
         //console.log(pName, priceStr, imgEl);
+
+        selectedOrderShares.push({
+            itemName: pName,
+            price: priceVal,
+        });
+        var orderShareLast = selectedOrderShares.length - 1;
+
         let tr = document.createElement('tr');
         let td = document.createElement('td');
         td.classList.add('icart-table__td');
@@ -141,14 +225,20 @@ function populateOrderTable() {
         td.classList.add('icart-table__td');
         td.innerText = priceStr;
         tr.appendChild(td);
-        td = document.createElement('td')
-        td.classList.add('icart-table__td');
-        let chkbox = document.createElement('input');
-        chkbox.setAttribute('type', 'checkbox');
-        chkbox.setAttribute('onchange', "setCheckboxValue(event)");
-        chkbox.setAttribute('id', `${MATE1}_${i}`);
-        td.appendChild(chkbox);
-        tr.appendChild(td);
+
+        MATES.forEach(mate => {
+            td = document.createElement('td')
+            td.classList.add('icart-table__td');
+            let chkbox = document.createElement('input');
+            chkbox.setAttribute('type', 'checkbox');
+            chkbox.setAttribute('onchange', "setCheckboxValue(event)");
+            chkbox.setAttribute('id', `${mate}_${i}`);
+            td.appendChild(chkbox);
+            tr.appendChild(td);
+            selectedOrderShares[orderShareLast][mate] = false;
+        })
+        
+        /*
         td = document.createElement('td')
         td.classList.add('icart-table__td');
         chkbox = document.createElement('input')
@@ -165,15 +255,11 @@ function populateOrderTable() {
         chkbox.setAttribute('id', `${MATE3}_${i}`);
         td.appendChild(chkbox);
         tr.appendChild(td);
+        */
+
         tableBody.appendChild(tr);
 
-        selectedOrderShares.push({
-            itemName: pName,
-            price: priceVal,
-            [MATE1]: false,
-            [MATE2]: false,
-            [MATE3]: false
-        })
+        
     })
     document.getElementById('share_table').appendChild(tableBody);
 }
@@ -243,13 +329,26 @@ function setCheckboxValue(event) {
 }
 
 function calculateShares() {
+    MATES.forEach(mate => {
+        individualShares[mate] = 0.0;
+    })
+    /*
     individualShares[MATE1] = 0.0;
     individualShares[MATE2] = 0.0;
     individualShares[MATE3] = 0.0;
+    */
     unEvenShares = [];
 
     selectedOrderShares.forEach(prod => {
         let nos = 0;
+
+        MATES.forEach(mate => {
+            if (prod[mate]) {
+                nos += 1;
+            }
+        });
+
+        /*
         if (prod[MATE1]) {
             nos = nos + 1;
         }
@@ -259,9 +358,16 @@ function calculateShares() {
         if (prod[MATE3]) {
             nos = nos + 1;
         }
+        */
 
         if (nos > 0) {
             const pricePerShare = prod.price / nos;
+            MATES.forEach(mate => {
+                if (prod[mate]) {
+                    individualShares[mate] += pricePerShare;
+                }
+            })
+            /*
             if (prod[MATE1]) {
                 individualShares[MATE1] += pricePerShare;
             }
@@ -271,6 +377,7 @@ function calculateShares() {
             if (prod[MATE3]) {
                 individualShares[MATE3] += pricePerShare;
             }
+            */
         }
         else {
             unEvenShares.push(prod);
@@ -296,7 +403,7 @@ function calculateShares() {
         td = document.createElement('td');
         td.classList.add('icart-table__td');
         td.classList.add('text-capitalize');
-        td.innerText = individualShares[x] + (miscCharges/3) - (credit/3);
+        td.innerText = individualShares[x] + (miscCharges/N) - (credit/N);
         tr.appendChild(td);
         tableBody.appendChild(tr);
     })
@@ -324,3 +431,7 @@ function calculateShares() {
     
     document.getElementById('uneven_shares').appendChild(tableBody);
 }
+
+//function exportExpensesToExcel() {
+    //const ws = utils.json_to_sheet()
+//}

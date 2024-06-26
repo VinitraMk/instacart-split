@@ -1,0 +1,7 @@
+#{$global}-control {
+    &-input {
+        border: 1px solid $gray;
+        border-radius: pxToRem(5);
+        height: pxToRem(35);
+    }
+}

@@ -5,12 +5,32 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="scss/styles.css">
   </head>
-  <body onload="checkGmailAuth()">
+  <body>
     <div class="icart">
         <header class="icart-header">
             Instacart Split
         </header>
         <div class='w-100 m-t-4 text-c overflow-auto--y'>
+            <div id="people_share">
+                <h3>Add people for share</h4>
+                <table class="icart-table m-b-4 p-b-2" style="width: 700px;" id="people_share_table">
+                    <thead>
+                        <th class="icart-table__th">Name</th>
+                    </thead>
+                    <tbody>
+                        <td class="icart-table__td">
+                            <input class="icart-control-input" id="people_input"/>
+                        </td>
+                    </tbody>
+                    <tfoot>
+                        <td>
+                            <button id="add_ppl_btn" class="icart-btn-primary d-iblock" onclick="addPeople()">
+                                Add people
+                            </button>
+                        </td>
+                    </tfoot>
+                </table>
+            </div>
             <form class="m-b-4" id="upload_form">
                 <!--<label class="m-r-2">Upload order html page:</label>-->
                 <label class="icart-btn-primary d-iblock">
@@ -18,16 +38,12 @@
                     Upload Order Html Page
                 </label>
             </form>
+            
             <div id="order_summary" class="d-none">
                 <div class="m-t-2" id="order_info">Order Info: </div>
                 <h4>Order Items</h4>
                 <table class="icart-table" style="width: 700px;" id="share_table">
                     <thead>
-                        <th class="icart-table__th" style="width: 40%;">Item Name</th>
-                        <th class="icart-table__th">Item Price</th>
-                        <th class="icart-table__th">Urja</th>
-                        <th class="icart-table__th">Vinitra</th>
-                        <th class="icart-table__th">Srimathi</th>
                     </thead>
                 </table>
                 <table class="icart-table m-t-4" style="width: 700px;" id="order_total">
