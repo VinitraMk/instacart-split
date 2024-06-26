@@ -1,9 +1,5 @@
 //import { utils } from 'xlsx';
 
-const MATE1 = 'urja';
-const MATE2 = 'vinitra';
-const MATE3 = 'srimathi';
-
 let MATES = [];
 
 let selectedOrderContent = null;
@@ -332,11 +328,6 @@ function calculateShares() {
     MATES.forEach(mate => {
         individualShares[mate] = 0.0;
     })
-    /*
-    individualShares[MATE1] = 0.0;
-    individualShares[MATE2] = 0.0;
-    individualShares[MATE3] = 0.0;
-    */
     unEvenShares = [];
 
     selectedOrderShares.forEach(prod => {
@@ -348,17 +339,6 @@ function calculateShares() {
             }
         });
 
-        /*
-        if (prod[MATE1]) {
-            nos = nos + 1;
-        }
-        if (prod[MATE2]) {
-            nos = nos + 1;
-        }
-        if (prod[MATE3]) {
-            nos = nos + 1;
-        }
-        */
 
         if (nos > 0) {
             const pricePerShare = prod.price / nos;
@@ -367,17 +347,6 @@ function calculateShares() {
                     individualShares[mate] += pricePerShare;
                 }
             })
-            /*
-            if (prod[MATE1]) {
-                individualShares[MATE1] += pricePerShare;
-            }
-            if (prod[MATE2]) {
-                individualShares[MATE2] += pricePerShare;
-            }
-            if (prod[MATE3]) {
-                individualShares[MATE3] += pricePerShare;
-            }
-            */
         }
         else {
             unEvenShares.push(prod);
