@@ -1,5 +1,3 @@
-//import { utils } from 'xlsx';
-
 let MATES = [];
 
 let selectedOrderContent = null;
@@ -10,26 +8,160 @@ let selectedOrderTotal = [];
 let unEvenShares = [];
 let orderInfo = '';
 let credit = 0.0
+let gapiInited = false;
+let gisInited = false;
+let tokenClient;
+
 let N = 0;
+let ACCESS_TOKEN = '';
+const CLIENT_ID = '812777760600-3h0hirjcekipu8apc5oue06jk54b1fh1.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAQ9-LBIQurVJFn-9UawHFeCbz9YZ9QB2s';
+const SHEETS_SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
+// Discovery doc URL for APIs used by the quickstart
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const BASE_SHEETS_URL = 'https://sheets.googleapis.com/';
+const BASE_DRIVE_URL = 'https://www.googleapis.com/drive/';
+
+
+/* init page */
 
 window.onload = () => {
-    initPage();
+    console.log(window.location.href);
+    const currUrl = window.location.href;
+    if (currUrl.includes('access_token')) {
+        const si = currUrl.indexOf('access_token') + 13;
+        const ei = currUrl.indexOf('token_type') - 1;
+        ACCESS_TOKEN = currUrl.substring(si,ei);
+        sessionStorage.setItem('access_token', ACCESS_TOKEN);
+        window.location.href = '/';
+    } else {
+        if (sessionStorage.getItem('access_token')) {
+            initPage();
+        } else {
+            oauthSignIn();
+        }
+    }
+    //initPage();
 }
+
+/* ============================ Google auth ========================== */
+
+function gapiLoaded() {
+    console.log('gapi loaded');
+    gapi.load('client', initializeGapiClient);
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: DRIVE_SCOPES,
+        callback: '', // defined later
+    });
+    gisInited = true;
+    console.log('gis loaded');
+    enableButtons();
+}
+
+async function initializeGapiClient() {
+    await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: [DISCOVERY_DOC],
+    });
+    await gapi.client.load('drive', 'v3', () => {
+        listFiles();
+    })
+    gapiInited = true;
+    //enableButtons();
+}
+
+function enableButtons() {
+    document.getElementById('file').removeAttribute('disabled');
+    document.getElementById('add_ppl_btn').removeAttribute('disabled')
+    /*
+    tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+        throw (resp);
+        }
+        await listFiles();
+    };
+
+    if (gapi.client.getToken() === null) {
+        // Prompt the user to select a Google Account and ask for consent to share their data
+        // when establishing a new session.
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+        // Skip display of account chooser and consent dialog for an existing session.
+        tokenClient.requestAccessToken({prompt: ''});
+    }
+    */
+}
+
+function oauthSignIn() {
+    // Google's OAuth 2.0 endpoint for requesting an access token
+    var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+    // Create <form> element to submit parameters to OAuth 2.0 endpoint.
+    var form = document.createElement('form');
+    form.setAttribute('method', 'GET'); // Send as a GET request.
+    form.setAttribute('action', oauth2Endpoint);
+
+    // Parameters to pass to OAuth 2.0 endpoint.
+    var params = {'client_id': CLIENT_ID,
+                    'redirect_uri': 'https://localhost:3000/',
+                    'response_type': 'token',
+                    'scope': DRIVE_SCOPES,
+                    'include_granted_scopes': 'true',
+                    'state': 'pass-through value'};
+
+    // Add form parameters as hidden input values.
+    for (var p in params) {
+        var input = document.createElement('input');
+        input.setAttribute('type', 'hidden');
+        input.setAttribute('name', p);
+        input.setAttribute('value', params[p]);
+        form.appendChild(input);
+    }
+
+    // Add form to page and submit it to open the OAuth 2.0 endpoint.
+    document.body.appendChild(form);
+    form.submit();
+}
+
+/* ==================== Drive Api Handler ========================= */
+
+async function listFiles() {
+    try {
+        var res = await gapi.client.drive.files.list({
+            name: 'exp-report-jun-2024'
+        });
+    } catch(err) {
+        console.log(err);
+        return;
+    }
+    const files = res.result.files;
+    console.log('drive api response', res);
+}
+
+
+/* ==================== Split Handler ========================== */ 
 
 function initPage() {
     var ppls = localStorage.getItem("instacart-ppl");
-    MATES = ppls.split(",");
-    var tableEl = document.querySelector('#people_share_table tbody');
-    MATES.forEach(mate => {
-        var rowEl = document.createElement('tr');
-        var cellEll = document.createElement('td');
-        cellEll.classList.add('icart-table__td');
-        cellEll.innerText = mate;
-        rowEl.appendChild(cellEll);
-        tableEl.appendChild(rowEl);
-        individualShares[mate] = 0.0;
-    });
-    N = MATES.length;
+    if (ppls != "" && ppls != null) {
+        MATES = ppls.split(",");
+        var tableEl = document.querySelector('#people_share_table tbody');
+        MATES.forEach(mate => {
+            var rowEl = document.createElement('tr');
+            var cellEll = document.createElement('td');
+            cellEll.classList.add('icart-table__td');
+            cellEll.innerText = mate;
+            rowEl.appendChild(cellEll);
+            tableEl.appendChild(rowEl);
+            individualShares[mate] = 0.0;
+        });
+        N = MATES.length;
+    }
 }
 
 function refresh() {
@@ -234,25 +366,6 @@ function populateOrderTable() {
             selectedOrderShares[orderShareLast][mate] = false;
         })
         
-        /*
-        td = document.createElement('td')
-        td.classList.add('icart-table__td');
-        chkbox = document.createElement('input')
-        chkbox.setAttribute('type', 'checkbox');
-        chkbox.setAttribute('onchange', "setCheckboxValue(event)");
-        chkbox.setAttribute('id', `${MATE2}_${i}`);
-        td.appendChild(chkbox);
-        tr.appendChild(td);
-        td = document.createElement('td')
-        td.classList.add('icart-table__td');
-        chkbox = document.createElement('input');
-        chkbox.setAttribute('type', 'checkbox');
-        chkbox.setAttribute('onchange', "setCheckboxValue(event)");
-        chkbox.setAttribute('id', `${MATE3}_${i}`);
-        td.appendChild(chkbox);
-        tr.appendChild(td);
-        */
-
         tableBody.appendChild(tr);
 
         
@@ -401,6 +514,4 @@ function calculateShares() {
     document.getElementById('uneven_shares').appendChild(tableBody);
 }
 
-//function exportExpensesToExcel() {
-    //const ws = utils.json_to_sheet()
-//}
+

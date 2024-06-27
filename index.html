@@ -24,7 +24,7 @@
                     </tbody>
                     <tfoot>
                         <td>
-                            <button id="add_ppl_btn" class="icart-btn-primary d-iblock" onclick="addPeople()">
+                            <button id="add_ppl_btn" class="icart-btn-primary d-iblock" onclick="addPeople()" disabled="true">
                                 Add people
                             </button>
                         </td>
@@ -34,7 +34,7 @@
             <form class="m-b-4" id="upload_form">
                 <!--<label class="m-r-2">Upload order html page:</label>-->
                 <label class="icart-btn-primary d-iblock">
-                    <input id="file" name="file" type="file" onchange="readFile(event)"/>
+                    <input id="file" name="file" type="file" onchange="readFile(event)" disabled="true"/>
                     Upload Order Html Page
                 </label>
             </form>
@@ -63,5 +63,7 @@
 
     <pre id="content" style="white-space: pre-wrap;"></pre>
     <script async defer src="./index.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
   </body>
 </html>
