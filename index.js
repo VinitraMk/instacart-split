@@ -17,7 +17,7 @@ let ACCESS_TOKEN = '';
 const CLIENT_ID = '812777760600-3h0hirjcekipu8apc5oue06jk54b1fh1.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAQ9-LBIQurVJFn-9UawHFeCbz9YZ9QB2s';
 const SHEETS_SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
-const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
+const DRIVE_SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.meet.readonly https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly";
 // Discovery doc URL for APIs used by the quickstart
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const BASE_SHEETS_URL = 'https://sheets.googleapis.com/';
@@ -27,22 +27,11 @@ const BASE_DRIVE_URL = 'https://www.googleapis.com/drive/';
 /* init page */
 
 window.onload = () => {
-    console.log(window.location.href);
-    const currUrl = window.location.href;
-    if (currUrl.includes('access_token')) {
-        const si = currUrl.indexOf('access_token') + 13;
-        const ei = currUrl.indexOf('token_type') - 1;
-        ACCESS_TOKEN = currUrl.substring(si,ei);
-        sessionStorage.setItem('access_token', ACCESS_TOKEN);
-        window.location.href = '/';
-    } else {
-        if (sessionStorage.getItem('access_token')) {
-            initPage();
-        } else {
-            oauthSignIn();
-        }
-    }
     //initPage();
+    if (sessionStorage.getItem('access_token')) {
+        document.getElementById('main_app').classList.remove('d-none');
+        document.getElementById('google_signin').classList.add('d-none');
+    }
 }
 
 /* ============================ Google auth ========================== */
@@ -60,29 +49,57 @@ function gisLoaded() {
     });
     gisInited = true;
     console.log('gis loaded');
-    enableButtons();
+    //enableButtons();
+    if (gapiInited && gisInited) {
+        document.getElementById('google_signin').removeAttribute('disabled');
+    }
 }
 
 async function initializeGapiClient() {
+    //gapi.client.setApiKey(API_KEY);
     await gapi.client.init({
         apiKey: API_KEY,
         discoveryDocs: [DISCOVERY_DOC],
     });
-    await gapi.client.load('drive', 'v3', () => {
-        listFiles();
-    })
+    //await gapi.client.load('drive', 'v3', () => {
+        //listFiles();
+    //})
     gapiInited = true;
+    if (gapiInited && gisInited) {
+        document.getElementById('google_signin').removeAttribute('disabled');
+    }
     //enableButtons();
 }
 
 function enableButtons() {
-    document.getElementById('file').removeAttribute('disabled');
+    document.getElementById('file_upload').classList.remove('disabled');
     document.getElementById('add_ppl_btn').removeAttribute('disabled')
-    /*
+    document.getElementById('file_upload').querySelector('input').removeAttribute('disabled');
+}
+
+function loadClient() {
+    gapi.client.setApiKey(API_KEY);
+    return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/drive/v3/rest")
+        .then(function() { console.log("GAPI client loaded for API"); },
+              function(err) { console.error("Error loading GAPI client for API", err); })
+        .then(() => { listFiles(); })
+}
+
+function oauthSignIn() {
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) {
-        throw (resp);
+            throw (resp);
         }
+        //console.log('resp', resp);
+        sessionStorage.setItem('access_token', resp.access_token);
+        setTimeout(() => {
+            sessionStorage.clear();
+            oauthSignIn();
+        }, 3600000);
+        //document.getElementById('signout_button').style.visibility = 'visible';
+        document.getElementById('user_authentication').classList.add('d-none');
+        document.getElementById('main_app').classList.remove('d-none');
+        enableButtons();
         await listFiles();
     };
 
@@ -94,38 +111,6 @@ function enableButtons() {
         // Skip display of account chooser and consent dialog for an existing session.
         tokenClient.requestAccessToken({prompt: ''});
     }
-    */
-}
-
-function oauthSignIn() {
-    // Google's OAuth 2.0 endpoint for requesting an access token
-    var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
-
-    // Create <form> element to submit parameters to OAuth 2.0 endpoint.
-    var form = document.createElement('form');
-    form.setAttribute('method', 'GET'); // Send as a GET request.
-    form.setAttribute('action', oauth2Endpoint);
-
-    // Parameters to pass to OAuth 2.0 endpoint.
-    var params = {'client_id': CLIENT_ID,
-                    'redirect_uri': 'https://localhost:3000/',
-                    'response_type': 'token',
-                    'scope': DRIVE_SCOPES,
-                    'include_granted_scopes': 'true',
-                    'state': 'pass-through value'};
-
-    // Add form parameters as hidden input values.
-    for (var p in params) {
-        var input = document.createElement('input');
-        input.setAttribute('type', 'hidden');
-        input.setAttribute('name', p);
-        input.setAttribute('value', params[p]);
-        form.appendChild(input);
-    }
-
-    // Add form to page and submit it to open the OAuth 2.0 endpoint.
-    document.body.appendChild(form);
-    form.submit();
 }
 
 /* ==================== Drive Api Handler ========================= */
@@ -133,7 +118,7 @@ function oauthSignIn() {
 async function listFiles() {
     try {
         var res = await gapi.client.drive.files.list({
-            name: 'exp-report-jun-2024'
+            q: "name=\"exp-report-jun-2024\""
         });
     } catch(err) {
         console.log(err);

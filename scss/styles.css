@@ -1979,6 +1979,11 @@ label input[type=file] {
   border-radius: 5px;
   cursor: pointer;
 }
+.icart-btn-primary:disabled, .icart-btn-primary.disabled {
+  color: black;
+  background-color: #c4c4c4;
+  cursor: not-allowed;
+}
 
 .icart-select select {
   width: 28.5714285714rem;

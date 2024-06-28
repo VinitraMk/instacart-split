@@ -8,5 +8,11 @@
         box-sizing: content-box;
         border-radius: 5px;
         cursor: pointer;
+
+        &:disabled, &.disabled {
+            color: black;
+            background-color: $gray;
+            cursor: not-allowed;
+        }
     }
 }
