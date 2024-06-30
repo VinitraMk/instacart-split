@@ -7,19 +7,22 @@ let individualShares = {
 let selectedOrderTotal = [];
 let unEvenShares = [];
 let orderInfo = '';
+let orderDeliveryMonth = '';
 let credit = 0.0
 let gapiInited = false;
 let gisInited = false;
 let tokenClient;
+let expenseReportFileId = ''
 
 let N = 0;
 let ACCESS_TOKEN = '';
 const CLIENT_ID = '812777760600-3h0hirjcekipu8apc5oue06jk54b1fh1.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAQ9-LBIQurVJFn-9UawHFeCbz9YZ9QB2s';
 const SHEETS_SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
-const DRIVE_SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.meet.readonly https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly";
+const DRIVE_SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.meet.readonly https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/spreadsheets";
 // Discovery doc URL for APIs used by the quickstart
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const DRIVE_DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SHEETS_DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
 const BASE_SHEETS_URL = 'https://sheets.googleapis.com/';
 const BASE_DRIVE_URL = 'https://www.googleapis.com/drive/';
 
@@ -31,6 +34,10 @@ window.onload = () => {
     if (sessionStorage.getItem('access_token')) {
         document.getElementById('main_app').classList.remove('d-none');
         document.getElementById('google_signin').classList.add('d-none');
+        enableButtons();
+        initPage();
+    } else {
+        //oauthSignIn();
     }
 }
 
@@ -52,6 +59,7 @@ function gisLoaded() {
     //enableButtons();
     if (gapiInited && gisInited) {
         document.getElementById('google_signin').removeAttribute('disabled');
+        oauthSignIn();
     }
 }
 
@@ -59,7 +67,7 @@ async function initializeGapiClient() {
     //gapi.client.setApiKey(API_KEY);
     await gapi.client.init({
         apiKey: API_KEY,
-        discoveryDocs: [DISCOVERY_DOC],
+        discoveryDocs: [SHEETS_DISCOVERY_DOC, DRIVE_DISCOVERY_DOC],
     });
     //await gapi.client.load('drive', 'v3', () => {
         //listFiles();
@@ -67,6 +75,8 @@ async function initializeGapiClient() {
     gapiInited = true;
     if (gapiInited && gisInited) {
         document.getElementById('google_signin').removeAttribute('disabled');
+        initPage();
+        oauthSignIn();
     }
     //enableButtons();
 }
@@ -75,14 +85,6 @@ function enableButtons() {
     document.getElementById('file_upload').classList.remove('disabled');
     document.getElementById('add_ppl_btn').removeAttribute('disabled')
     document.getElementById('file_upload').querySelector('input').removeAttribute('disabled');
-}
-
-function loadClient() {
-    gapi.client.setApiKey(API_KEY);
-    return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/drive/v3/rest")
-        .then(function() { console.log("GAPI client loaded for API"); },
-              function(err) { console.error("Error loading GAPI client for API", err); })
-        .then(() => { listFiles(); })
 }
 
 function oauthSignIn() {
@@ -94,13 +96,14 @@ function oauthSignIn() {
         sessionStorage.setItem('access_token', resp.access_token);
         setTimeout(() => {
             sessionStorage.clear();
-            oauthSignIn();
-        }, 3600000);
+            //oauthSignIn();
+        }, 3600);
         //document.getElementById('signout_button').style.visibility = 'visible';
         document.getElementById('user_authentication').classList.add('d-none');
         document.getElementById('main_app').classList.remove('d-none');
         enableButtons();
-        await listFiles();
+        
+        //await listFiles();
     };
 
     if (gapi.client.getToken() === null) {
@@ -113,12 +116,14 @@ function oauthSignIn() {
     }
 }
 
-/* ==================== Drive Api Handler ========================= */
+/* ==================== Drive/Sheets Api Handler ========================= */
 
-async function listFiles() {
+async function listFiles(orderDeliveryMonth, orderDeliveryYear) {
+    //gapi.client.setToken({ access_token: sessionStorage.getItem('access_token') });
+    var reportName = `exp-report-${orderDeliveryMonth.substring(0,3)}-${orderDeliveryYear}`
     try {
         var res = await gapi.client.drive.files.list({
-            q: "name=\"exp-report-jun-2024\""
+            q: `name="${reportName}"`
         });
     } catch(err) {
         console.log(err);
@@ -126,6 +131,51 @@ async function listFiles() {
     }
     const files = res.result.files;
     console.log('drive api response', res);
+    if (files.length === 1) {
+        expenseReportFileId = files[0].id;
+    } else if (files.length === 0) {
+        try {
+            gapi.client.sheets.spreadsheets.create({
+                properties: {
+                    title: reportName
+                }
+            })
+        } catch(err) {
+            console.log("Error: ", err)
+        }
+    } else {
+        alert('multiple files found by this name!');
+        return;
+    }
+}
+
+async function updateExpensesInReport(myGroceryShare) {
+    let groceryShare = myGroceryShare;
+    try {
+        var res = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: expenseReportFileId,
+            range: 'Sheet1!B11',
+        })
+    } catch(err) {
+        console.log('Error in getting spreadsheet value', err);
+        return;
+    }
+    groceryShare += parseFloat(res.result.values[0][0]);
+    // update final value of grocery
+    try {
+        res = await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: expenseReportFileId,
+            range: 'Sheet1!B11',
+            majorDimension: 'ROWS',
+            valueInputOption: 'USER_ENTERED',
+            values: [[groceryShare]]
+        });
+    } catch(err) {
+        console.log('Error in updating grocery share in spreadsheet', err);
+        return;
+    }
+    console.log('update res', res);
+
 }
 
 
@@ -238,6 +288,11 @@ function readOrder(htmlContent) {
 
     orderInfo = itemMain.querySelector('div.DriverDeliverySchedule').innerText;
     document.getElementById('order_info').innerText = `Order Info: ${orderInfo}`;
+    var endStr = orderInfo.substring(orderInfo.indexOf('delivered on') + 13);
+    var orderDeliveryMonth = endStr.substring(0, endStr.indexOf(' ')).toLowerCase();
+    var ei = endStr.indexOf(' at');
+    var orderDeliveryYear = endStr.substring(ei - 4, ei);
+    listFiles(orderDeliveryMonth, orderDeliveryYear)
 
     selectedOrderTotal = [];
     for(let i = 0; i < itemTotals.length; i++) {
@@ -463,8 +518,8 @@ function calculateShares() {
     Object.keys(individualShares).forEach(x => {
         let tr = document.createElement('tr');
         let td = document.createElement('td');
-        td.classList.add('icart-table__td');
         td.classList.add('text-capitalize');
+       
         td.innerText = `${x}'s Share`;
         tr.appendChild(td);
         td = document.createElement('td');
@@ -497,6 +552,7 @@ function calculateShares() {
     })
     
     document.getElementById('uneven_shares').appendChild(tableBody);
+    updateExpensesInReport(individualShares['vinitra']);
 }
 
 
